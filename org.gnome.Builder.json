@@ -21,6 +21,8 @@
         "cflags": "-O2 -g",
         "cxxflags": "-O2 -g",
         "env": {
+            /* Such hack, much bad */
+            "MOUNT_FUSE_PATH": "../tmp/",
             "V": "1"
         }
     },
@@ -30,6 +32,65 @@
                 "/share/vala",
                 "*.la", "*.a"],
     "modules": [
+        {
+            /* README: needed for ostree */
+            "name": "libgsystem",
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "git://git.gnome.org/libgsystem"
+                }
+            ]
+        },
+        {
+            /* README: needed for xdg-app */
+            "name": "libfuse",
+            "cleanup": [ "/bin" ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://github.com/libfuse/libfuse/releases/download/fuse_2_9_5/fuse-2.9.5.tar.gz",
+                    "sha256": "579f371cc5ffc1afca7057512bf7d52988a9ede57859a7c55e5b9f72435cdbb5"
+                }
+            ]
+        },
+        {
+            /* README: needed for xdg-app */
+            "name": "ostree",
+            "config-opts": ["--disable-man"],
+            "cleanup": [ "/bin", "/etc/grub.d", "/libexec" ],
+            /* Work around lack of libgpgme-pthread in runtime */
+            "post-install": ["cp /usr/lib/libgpgme-pthread* /app/lib/" ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "git://git.gnome.org/ostree"
+                }
+            ]
+        },
+        {
+            "name": "xdg-app",
+            "config-opts": ["--disable-documentation", "--disable-seccomp",
+                            "--disable-sandboxed-triggers"],
+            "make-args": [ "XDG_APP_BINDIR=/usr/bin" ],
+            "cleanup": [ "/etc/profile.d",
+                         "/libexec",
+                         "/lib/systemd",
+                         "/share/dbus-1/interfaces/org.freedesktop.*",
+                         "/share/dbus-1/services/org.freedesktop.*",
+                         "/share/gdm" ],
+            "post-install": [
+                /* These are needed for the triggers */
+                "cp /usr/bin/gtk-update-icon-cache /app/bin",
+                "cp /usr/bin/update-mime-database /app/bin",
+                "cp /usr/bin/update-desktop-database /app/bin"],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "git://anongit.freedesktop.org/xdg-app/xdg-app"
+                }
+            ]
+        },
         {
             "name": "libssh2",
             "cmake": true,
